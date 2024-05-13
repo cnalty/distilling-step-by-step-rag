@@ -32,5 +32,6 @@ memory = Memory(
 
 batch_size = 1024
 for i in tqdm(range(0, len(dataset['input']), batch_size)):
-    contexts = [dataset['input'][i] + " " + dataset['label'][i] for i in range(i, min(i+batch_size, len(dataset['input'])))]
-    memory.save(texts=contexts)
+    contexts = [dataset['input'][j] + " " + dataset['label'][j] for j in range(i, min(i+batch_size, len(dataset['input'])))]
+    metadata = [j for j in range(i, min(i+batch_size, len(dataset['input'])))]
+    memory.save(texts=contexts, metadata=metadata)
