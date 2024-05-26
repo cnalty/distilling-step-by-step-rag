@@ -7,7 +7,7 @@ import torch
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, required=True)
+parser.add_argument('--dataset', type=str, required=True, choices=['cqa', 'svamp', 'anli1', 'esnli'])
 
 args = parser.parse_args()
 
@@ -15,10 +15,10 @@ if args.dataset == 'cqa':
     dataset_loader = CQADatasetLoader()
 elif args.dataset == 'svamp':
     dataset_loader = SVAMPDatasetLoader()
-elif args.dataset == 'esnli':
-    dataset_loader = ESNLIDatasetLoader()
 elif args.dataset == 'anli1':
     dataset_loader = ANLI1DatasetLoader()
+elif args.dataset == 'esnli':
+    dataset_loader = ESNLIDatasetLoader()
 
 # Model
 model_id = "nvidia/Llama3-ChatQA-1.5-8B"
@@ -58,11 +58,23 @@ for index in tqdm(range(len(matches))):
         final_context += sub_context
 
 
+    # Framing the prompt with context, prequestion dialogue and actual question
+    if args.dataset == 'svamp':
+        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: '"
+    elif args.dataset == 'cqa':
+        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: {choice}'"
+    elif args.dataset == 'anli1' or args.dataset == 'esnli':
+        pre_question = "Now carefully observe how assistant logically answers whether the relationship between premise and hypothesis is 'entailment', 'neutral', or 'contradiction'. The assistant also provides a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: {choice}'"
+    else:
+        raise RuntimeError
+
     # Framing the prompt with context, prequestion dialogue and actual question 
     pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: hence the answer is Answer: '"
     actual_question = f"User: {dataset[index]['input']}\n\nAssistant:\n"
     actual_label = f"\nActual_label: {dataset[index]['label']}\n"
     prompt = f"{system}\n\n{final_context}\n{pre_question}\n\n{actual_question}"
+    if args.dataset == 'anli1' or args.dataset == 'esnli':
+        prompt += f"\nAnswer choices:\n(a) entailment \n(b) neutral \n(c) contradiction"
 
     # Inferring the Teacher with the prompt:
     tokenized_prompt = tokenizer(tokenizer.bos_token + prompt, return_tensors="pt").to(model.device)
@@ -72,11 +84,11 @@ for index in tqdm(range(len(matches))):
                              pad_token_id=tokenizer.eos_token_id,
                              eos_token_id=terminators)
     response = outputs[0][tokenized_prompt.input_ids.shape[-1]:]
-    assistnat_answer = tokenizer.decode(response, skip_special_tokens=True)
+    assistant_answer = tokenizer.decode(response, skip_special_tokens=True)
 
     # Preparing the dump for json
     instance['input'] = dataset[index]['input']
-    instance['gen_label'] = assistnat_answer
+    instance['gen_label'] = assistant_answer
     instance['org_label'] = dataset[index]['label']
     final_dump.append(instance)
     
