@@ -68,8 +68,6 @@ for index in tqdm(range(len(matches))):
     else:
         raise RuntimeError
 
-    # Framing the prompt with context, prequestion dialogue and actual question 
-    pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: hence the answer is Answer: '"
     actual_question = f"User: {dataset[index]['input']}\n\nAssistant:\n"
     actual_label = f"\nActual_label: {dataset[index]['label']}\n"
     prompt = f"{system}\n\n{final_context}\n{pre_question}\n\n{actual_question}"
