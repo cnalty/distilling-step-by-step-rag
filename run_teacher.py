@@ -68,11 +68,12 @@ for index in tqdm(range(len(matches))):
     else:
         raise RuntimeError
 
-    actual_question = f"User: {dataset[index]['input']}\n\nAssistant:\n"
+    if args.dataset == 'svamp' or args.dataset == 'cqa':
+        actual_question = f"User: {dataset[index]['input']}\n\nAssistant:\n"
+    elif args.dataset == 'anli1' or args.dataset == 'esnli':
+        actual_question = f"User: {dataset[index]['input']}\nAnswer choices:\n(a) entailment \n(b) neutral \n(c) contradiction\n\nAssistant:\n"
     actual_label = f"\nActual_label: {dataset[index]['label']}\n"
     prompt = f"{system}\n\n{final_context}\n{pre_question}\n\n{actual_question}"
-    if args.dataset == 'anli1' or args.dataset == 'esnli':
-        prompt += f"\nAnswer choices:\n(a) entailment \n(b) neutral \n(c) contradiction"
 
     # Inferring the Teacher with the prompt:
     tokenized_prompt = tokenizer(tokenizer.bos_token + prompt, return_tensors="pt").to(model.device)
