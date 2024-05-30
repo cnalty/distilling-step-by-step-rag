@@ -30,8 +30,13 @@ memory = Memory(
     chunking_strategy={"mode": "paragraph"},
 )
 
+max_metadata = 0
+for entry in memory.memory:
+    if memory.metadata_memory[entry["metadata_index"]] > max_metadata:
+        max_metadata = memory.metadata_memory[entry["metadata_index"]]
+
 batch_size = 1024
-for i in tqdm(range(0, len(dataset['input']), batch_size)):
+for i in tqdm(range(max_metadata + 1, len(dataset['input']), batch_size)):
     contexts = [dataset['input'][j] + " " + dataset['label'][j] for j in range(i, min(i+batch_size, len(dataset['input'])))]
     metadata = [j for j in range(i, min(i+batch_size, len(dataset['input'])))]
     memory.save(texts=contexts, metadata=metadata)
