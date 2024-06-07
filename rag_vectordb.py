@@ -4,6 +4,7 @@ from vectordb import Memory
 from tqdm import tqdm
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, required=True)
+parser.add_argument('--split', type=str, default='train')
 
 args = parser.parse_args()
 
@@ -16,7 +17,7 @@ elif args.dataset == 'esnli':
 elif args.dataset == 'anli1':
     dataset_loader = ANLI1DatasetLoader()
 
-dataset = dataset_loader.load_from_json()['train']
+dataset = dataset_loader.load_from_json()[args.split]
 #train_llm_rationales, train_llm_labels = dataset_loader.load_llm_preds(split='train')
 
 if 'nli' in args.dataset:
@@ -26,7 +27,7 @@ if 'nli' in args.dataset:
     )
 
 memory = Memory(
-    memory_file=f"{args.dataset}_rag.vecdb",
+    memory_file=f"{args.dataset}_{args.split}_rag.vecdb",
     chunking_strategy={"mode": "paragraph"},
 )
 
