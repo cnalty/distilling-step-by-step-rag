@@ -8,6 +8,7 @@ import torch
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, required=True, choices=['cqa', 'svamp', 'anli1', 'esnli'])
+parser.add_argument('--split', type=str, required=True, choices=['train', 'valid', 'test'])
 
 args = parser.parse_args()
 
@@ -31,19 +32,30 @@ terminators = [
     tokenizer.convert_tokens_to_ids("<|eot_id|>")
 ]
 
-system = "System: This is a chat between a user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions based on the context. The assistant should make use of the context to logically answer the questions"
-
 # Dataset
-dataset = dataset_loader.load_from_json()['train']
+dataset = dataset_loader.load_from_json()[args.split]
+if 'nli' in args.dataset:
+    dataset = dataset.map(
+        lambda example: {'input': "premise: " + example['premise'] + ", hypothesis: " + example['hypothesis']},
+        remove_columns=['premise', 'hypothesis'],
+    )
 
 print("\nExecution Starts Here!")
 
 # Reading and storing the matches
-with open(f'{args.dataset}_matches.txt', 'r') as f:
+with open(f'./datasets/{args.dataset}/{args.dataset}_{args.split}_matches.txt', 'r') as f:
     matches = f.readlines()
     f.close()
 
+# Initial system message to the prompt
+if args.dataset == 'svamp' or args.dataset == 'cqa':
+    system = "System: This is a chat between a user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions based on the context. The assistant should make use of the context to logically answer the questions"
+elif args.dataset == 'anli1' or args.dataset == 'esnli':
+    system = "System: This is a chat between a user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions based on the context. The assistant should make use of the context to logically think and identify if the premise and hypothesis in a user input entail or not. Don't assume anything, think logically. In case of ambiguity if no entailment or contradiction can be arrived at, choose the neutral choice"
+
+
 final_dump = [] #list of dictionaries with question, generated label, and original label
+
 for index in tqdm(range(len(matches))):
     
     match_list = matches[index].split()
@@ -60,18 +72,19 @@ for index in tqdm(range(len(matches))):
 
     # Framing the prompt with context, prequestion dialogue and actual question
     if args.dataset == 'svamp':
-        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: '"
+        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: ,hence the answer is Answer: '"
     elif args.dataset == 'cqa':
-        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: {choice}'"
+        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: ,hence the answer is Answer: {choice}'"
     elif args.dataset == 'anli1' or args.dataset == 'esnli':
-        pre_question = "Now carefully observe how assistant logically answers whether the relationship between premise and hypothesis is 'entailment', 'neutral', or 'contradiction'. The assistant also provides a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: {choice}'"
+        pre_question = "Now carefully observe how assistant logically answered above questions relating the premise to hypothesis and answer the user question along with a precise rationale on how the answer is achieved. Provide me output in this form 'Rationale: ,hence the answer is Answer: {choice}'"
     else:
         raise RuntimeError
 
     if args.dataset == 'svamp' or args.dataset == 'cqa':
         actual_question = f"User: {dataset[index]['input']}\n\nAssistant:\n"
     elif args.dataset == 'anli1' or args.dataset == 'esnli':
-        actual_question = f"User: {dataset[index]['input']}\nAnswer choices:\n(a) entailment \n(b) neutral \n(c) contradiction\n\nAssistant:\n"
+        actual_question = f"User: {dataset[index]['input']}\nAnswer_choices:\n(a) entailment \n(b) neutral \n(c) contradiction\n\nAssistant:\n"
+
     actual_label = f"\nActual_label: {dataset[index]['label']}\n"
     prompt = f"{system}\n\n{final_context}\n{pre_question}\n\n{actual_question}"
 
@@ -92,12 +105,12 @@ for index in tqdm(range(len(matches))):
     final_dump.append(instance)
     
     # print(prompt)
-    # print("instance:", instance)
-    # if index == 10:
+    # # print("instance:", instance)
+    # if index == 20:
     #     break  
 
 # Writing to json file
-with open(f"{args.dataset}_llama3.json", "w") as final:
+with open(f"./datasets/{args.dataset}/{args.dataset}_{args.split}_llama3.json", "w") as final:
     json.dump(final_dump, final)
     
     
