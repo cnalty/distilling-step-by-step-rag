@@ -55,6 +55,7 @@ def compute_metrics_text(tokenizer):
 def compute_metrics_text_aux(tokenizer):
     def compute_metrics(eval_pred):
         predictions, labels = eval_pred
+        predictions[0] = np.where(predictions[0] != -100, predictions[0], tokenizer.pad_token_id)
         decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
 
         labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
@@ -71,6 +72,7 @@ def compute_metrics_text_aux(tokenizer):
 def compute_metrics_equation(tokenizer):
     def compute_metrics(eval_pred):
         predictions, labels = eval_pred
+        predictions[0] = np.where(predictions[0] != -100, predictions[0], tokenizer.pad_token_id)
         decoded_preds = tokenizer.batch_decode(predictions[0], skip_special_tokens=True)
 
         labels = np.where(labels[0] != -100, labels[0], tokenizer.pad_token_id)
@@ -94,6 +96,7 @@ def compute_metrics_equation(tokenizer):
 def compute_metrics_equation_aux(tokenizer):
     def compute_metrics(eval_pred):
         predictions, labels = eval_pred
+        predictions[0] = np.where(predictions[0] != -100, predictions[0], tokenizer.pad_token_id)
         decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
 
         labels = np.where(labels != -100, labels, tokenizer.pad_token_id)

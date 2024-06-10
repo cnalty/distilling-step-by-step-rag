@@ -209,8 +209,8 @@ class SVAMPDatasetLoader(DatasetLoader):
             'train': 'train',
             'test': 'test',
         }
-        batch_size = 500
-        train_batch_idxs = range(2)
+        batch_size = 800
+        train_batch_idxs = range(1)
         test_batch_idxs = range(1)
 
 
