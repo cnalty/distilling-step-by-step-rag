@@ -70,12 +70,13 @@ class DatasetLoader(object):
         datasets = self._post_process(datasets) 
 
         # subsample training dataset if needed
-        num_train = len(datasets['train'])
+        num_train = 4870
         idxs = list()
         for idx in self.train_batch_idxs:
             idxs += range(idx*self.batch_size, (idx+1)*self.batch_size)        
         datasets['train'] = Dataset.from_dict(datasets['train'][[idx for idx in idxs if idx < num_train]])
-
+        print("Train:",len(datasets['train']))
+        print("Test:",len(datasets['test']))
         return datasets
 
 
@@ -88,10 +89,13 @@ class DatasetLoader(object):
 
             for output in outputs:
                 rationale, label = self._parse_llm_output(output)
-
+                
+                if len(rationales) == 4870:
+                    break
+                    
                 rationales.append(rationale)
                 labels.append(label)
-
+        print(len(rationales), len(labels))
         return rationales, labels
 
 
@@ -134,7 +138,7 @@ class CQADatasetLoader(DatasetLoader):
             'test': 'validation',
         }
         batch_size = 1000
-        train_batch_idxs = range(10)
+        train_batch_idxs = range(8)
         test_batch_idxs = range(2)
 
         super().__init__(dataset_name, source_dataset_name, dataset_version, has_valid, split_map,

@@ -78,11 +78,11 @@ for index in tqdm(range(len(matches))):
 
     # Framing the prompt with context, prequestion dialogue and actual question
     if args.dataset == 'svamp':
-        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: '"
+        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: ,hence the answer is Answer: '"
     elif args.dataset == 'cqa':
-        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: {choice}'"
+        pre_question = "Now carefully observe how assistant logically answered above questions and answer the user question along with a rationale on how the answer is achieved. Provide me output in this form 'Rationale: ,hence the answer is Answer: {choice}'"
     elif args.dataset == 'anli1' or args.dataset == 'esnli':
-        pre_question = "Now carefully observe how assistant logically answers whether the relationship between premise and hypothesis is 'entailment', 'neutral', or 'contradiction'. The assistant also provides a rationale on how the answer is achieved. Provide me output in this form 'Rationale: , hence the answer is Answer: {choice}'"
+        pre_question = "Now carefully observe how assistant logically answers whether the relationship between premise and hypothesis is 'entailment', 'neutral', or 'contradiction'. The assistant also provides a rationale on how the answer is achieved. Provide me output in this form 'Rationale: ,hence the answer is Answer: {choice}'"
     else:
         raise RuntimeError
 
