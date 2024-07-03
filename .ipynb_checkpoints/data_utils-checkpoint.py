@@ -70,7 +70,7 @@ class DatasetLoader(object):
         datasets = self._post_process(datasets) 
 
         # subsample training dataset if needed
-        num_train = 4870
+        num_train = len(datasets['train'])
         idxs = list()
         for idx in self.train_batch_idxs:
             idxs += range(idx*self.batch_size, (idx+1)*self.batch_size)        
@@ -90,8 +90,8 @@ class DatasetLoader(object):
             for output in outputs:
                 rationale, label = self._parse_llm_output(output)
                 
-                if len(rationales) == 4870:
-                    break
+                # if len(rationales) == 2435:
+                #     break
                     
                 rationales.append(rationale)
                 labels.append(label)
